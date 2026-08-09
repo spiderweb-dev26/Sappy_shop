@@ -1,0 +1,172 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reports   Report[]
+  items     InventoryItem[]
+  sales     Sale[]
+  orders    PurchaseOrder[]
+  expenses  Expense[]
+  sessions  DeviceSession[]
+  @@map("users")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("draft")
+  data        Json?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([status])
+  @@map("reports")
+}
+
+model InventoryItem {
+  id            String    @id @default(cuid())
+  serial        String    @unique
+  name          String
+  category      String?
+  quantity      Int       @default(1)
+  location      String?
+  notes         String?
+  purchaseValue Float?
+  sellingPrice  Float?
+  costUnknown   Boolean   @default(false)
+  dupKeptAt     DateTime?
+  dupKeptBy     String?
+  userId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sales         Sale[]
+  @@index([userId])
+  @@index([serial])
+  @@map("inventory_items")
+}
+
+model Sale {
+  id            String         @id @default(cuid())
+  saleNo        String         @unique
+  itemId        String?
+  itemName      String
+  serial        String
+  quantity      Int            @default(1)
+  unitPrice     Float          @default(0)
+  discount      Float          @default(0)
+  total         Float          @default(0)
+  paymentMethod String?
+  refunded      Boolean        @default(false)
+  refundedAt    DateTime?
+  note          String?
+  userId        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item          InventoryItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  @@index([userId])
+  @@index([createdAt])
+  backdated   Boolean   @default(false)
+  @@map("sales")
+}
+
+model PurchaseOrder {
+  id        String   @id @default(cuid())
+  poNo      String   @unique
+  supplier  String
+  lines     Json
+  totalCost Float    @default(0)
+  status    String   @default("draft")
+  note      String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("purchase_orders")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  category    String
+  description String?
+  amount      Float    @default(0)
+  date        DateTime @default(now())
+  userId      String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([date])
+  backdated   Boolean  @default(false)
+  @@map("expenses")
+}
+
+model Activity {
+  id         String   @id @default(cuid())
+  kind       String
+  entityType String?
+  entityId   String?
+  label      String
+  detail     String?
+  meta       Json?
+  actorId    String?
+  actorName  String?
+  actorEmail String?
+  createdAt  DateTime @default(now())
+  @@index([actorId])
+  @@index([createdAt])
+  @@index([kind])
+  @@map("activities")
+}
+
+model DeviceSession {
+  id         String   @id @default(cuid())
+  userId     String
+  sid        String   @unique
+  device     String?
+  revoked    Boolean  @default(false)
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("device_sessions")
+}
+
+model AppSettings {
+  id         String   @id @default("singleton")
+  masterHash String?
+  updatedAt  DateTime @updatedAt
+  @@map("app_settings")
+}
+model Credit {
+  id        String    @id @default(cuid())
+  customer  String
+  detail    String?
+  amount    Float     @default(0)
+  date      DateTime  @default(now())
+  paid      Boolean   @default(false)
+  paidAt    DateTime?
+  userId    String
+  createdAt DateTime  @default(now())
+  @@index([userId])
+  backdated   Boolean  @default(false)
+  @@map("credits")
+}
