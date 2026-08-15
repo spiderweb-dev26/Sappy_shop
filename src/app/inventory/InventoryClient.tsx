@@ -241,9 +241,36 @@ export default function InventoryClient() {
     } catch (e: any) { flash(e?.message || "Failed", "err"); } finally { setBusy(false); }
   }
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; e.target.value = ""; if (!file) return; setBusy(true); flash("", "ok");
-    try { const fd = new FormData(); fd.append("file", file); const r = await fetch("/api/inventory", { method: "POST", body: fd }); const data = await r.json(); if (!r.ok) throw new Error(data.error || "Failed"); res.reload(); flash(`Imported ${data.imported} item(s).`, "ok"); }
-    catch (e: any) { flash(e?.message || "Failed", "err"); } finally { setBusy(false); }
+    const file = e.target.files?.[0]; e.target.value = ""; if (!file) return;
+    setBusy(true); flash("", "ok");
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.read(await file.arrayBuffer());
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const pick = (r: any, keys: string[]) => { for (const k of Object.keys(r)) { const lk = String(k).toLowerCase().trim(); if (keys.includes(lk)) return r[k]; } return ""; };
+      let ok = 0;
+      for (const r of rows) {
+        const name = String(pick(r, ["name", "item", "item name", "title"]) || "").trim();
+        if (!name) continue;
+        const pv = String(pick(r, ["purchase value", "cost", "purchase"]) || "").trim();
+        const body: any = {
+          name,
+          category: String(pick(r, ["category"]) || "").trim() || undefined,
+          quantity: Number(pick(r, ["quantity", "qty", "stock"])) || 1,
+          location: String(pick(r, ["location"]) || "").trim() || undefined,
+          notes: String(pick(r, ["notes", "note"]) || "").trim() || undefined,
+          sellingPrice: Number(pick(r, ["selling price", "selling", "sell", "price"])) || 0,
+          purchaseValue: pv === "" ? undefined : Number(pv),
+          serial: String(pick(r, ["serial"]) || "").trim() || undefined,
+          allowDuplicate: true
+        };
+        const rr = await fetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        if (rr.ok) ok++;
+      }
+      res.reload();
+      flash("Imported " + ok + " item(s). Same-name entries were stored - review them in the Duplicates tab.", "ok");
+    } catch (e: any) { flash(e?.message || "Import failed", "err"); } finally { setBusy(false); }
   }
   const actions = (i: Item) => (
     <div className="flex items-center gap-1">

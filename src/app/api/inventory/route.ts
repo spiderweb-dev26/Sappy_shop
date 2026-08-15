@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const name = String(b?.name || "").trim();
     if (!name) return NextResponse.json({ error: "Item name is required." }, { status: 400 });
     const dupes = await withRetry(() => prisma.inventoryItem.findMany({ where: { name: { equals: name, mode: "insensitive" } } }));
-    if (dupes.length) {
+    if (dupes.length && !b.allowDuplicate) {
       const list = dupes.map((d: any) => `${d.name} - ${d.serial} (qty ${d.quantity})`).join("; ");
       return NextResponse.json({ error: `"${name}" is already recorded: ${list}. Edit the existing item instead of adding a duplicate.`, existing: dupes }, { status: 409 });
     }
