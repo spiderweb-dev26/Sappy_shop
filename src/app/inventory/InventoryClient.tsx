@@ -226,7 +226,8 @@ export default function InventoryClient() {
     if (!form.id && nm) {
       const clashes = items.filter((i) => (i.name || "").trim().toLowerCase() === nm);
       if (clashes.length) {
-        setErr(`"${(form.name || "").trim()}" is already recorded:` + "\n" + clashes.map((c) => `• ${c.name} — ${c.serial} (qty ${c.quantity})`).join("\n") + "\nEdit the existing item instead of adding a duplicate.");
+        const dupMsg = `"${(form.name || "").trim()}" is already recorded:\n` + clashes.map((c) => `• ${c.name} — ${c.serial} (qty ${c.quantity})`).join("\n") + "\nEdit the existing item instead of adding a duplicate.";
+        setErr(dupMsg); alert(dupMsg);
         return;
       }
     }
