@@ -221,6 +221,15 @@ export default function InventoryClient() {
   }
   const onMasterSet = () => { setMasterSet(true); window.dispatchEvent(new CustomEvent("sl:master-changed")); };
   async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const nm = (form.name || "").trim().toLowerCase();
+    if (!form.id && nm) {
+      const clashes = items.filter((i) => (i.name || "").trim().toLowerCase() === nm);
+      if (clashes.length) {
+        setErr(`"${(form.name || "").trim()}" is already recorded:` + "\n" + clashes.map((c) => `• ${c.name} — ${c.serial} (qty ${c.quantity})`).join("\n") + "\nEdit the existing item instead of adding a duplicate.");
+        return;
+      }
+    }
     e.preventDefault(); setBusy(true); flash("", "ok");
     const sell = Number(form.sellingPrice);
     if (!Number.isFinite(sell) || sell < 0) { flash("Selling price is required.", "err"); setBusy(false); return; }
