@@ -170,7 +170,7 @@ export default function InventoryClient() {
       doc.save("sappy-legacy-labels.pdf");
       flash(`Exported ${labels.length} label(s).`, "ok");
     } catch { flash("Label export failed.", "err"); }
-    setSheetBusy(false); }
+    setSheetBusy(false);
   }
 
   async function keepOne(i: Item) {
