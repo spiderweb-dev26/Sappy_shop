@@ -42,7 +42,7 @@ export function buildLabelSvg(name: string, serial: string, _qr?: string | null)
     '<g clip-path="url(#lc)">' +
     '<rect width="420" height="180" fill="#ffffff"/>' +
     '<rect width="56" height="180" fill="#065F46"/>' +
-    '<text x="28" y="90" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="13" letter-spacing="3" fill="#A7F3D0" transform="rotate(-90 28 90)">SAPPY LEGACY</text>' +
+    '<image x="8" y="10" width="40" height="40" href="/img/logo.png" preserveAspectRatio="xMidYMid meet"/>' + '<text x="28" y="120" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="12" letter-spacing="3" fill="#A7F3D0" transform="rotate(-90 28 120)">SAPPY LEGACY</text>' +
     '<text x="76" y="42" font-family="sans-serif" font-weight="700" font-size="17" fill="#065F46">' + n + '</text>' +
     '<text x="76" y="64" font-family="monospace" font-size="12" letter-spacing="1" fill="#047857">' + s + '</text>' +
     bars39(serial || "", 76, 82, 58, 300) +
@@ -62,4 +62,15 @@ function svgToPng(svg: string): Promise<string> {
     img.onerror = () => res("");
     img.src = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
   });
+}
+let _logo: string | null = null;
+export async function logoDataUrl(): Promise<string> {
+  if (_logo !== null) return _logo;
+  try {
+    const r = await fetch("/img/logo.png");
+    if (!r.ok) throw 0;
+    const b = await r.blob();
+    _logo = await new Promise((res) => { const f = new FileReader(); f.onload = () => res(String(f.result)); f.readAsDataURL(b); });
+  } catch { _logo = ""; }
+  return _logo;
 }

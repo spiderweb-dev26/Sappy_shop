@@ -10,7 +10,7 @@ import { PageSkeleton, ErrorBanner, Spinner } from "@/components/LoadState";
 import { Counter } from "@/components/Stat";
 import MasterModal from "@/components/MasterModal";
 import ImportGuideModal from "@/components/ImportGuideModal";
-import { makeQrDataUrl, makeQrBlock, buildLabelSvg, barcodeDataUrl } from "@/lib/qrClient";
+import { makeQrDataUrl, makeQrBlock, buildLabelSvg, barcodeDataUrl, logoDataUrl } from "@/lib/qrClient";
 type U = { name?: string | null; email?: string } | null;
 type Item = { id: string; serial: string; name: string; category: string | null; quantity: number; location: string | null; notes: string | null; purchaseValue: number | null; sellingPrice: number | null; costUnknown: boolean; dupKeptAt?: string | null; dupKeptBy?: string | null; createdAt: string; user?: U };
 const inp = "w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-2.5 text-sm text-emerald-900 placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
@@ -150,6 +150,7 @@ export default function InventoryClient() {
       const cellH = Math.min(60, Math.max(26, cellW / 2.2));
       const rowsN = Math.max(1, Math.floor((uH + g) / (cellH + g)));
       const per = cols * rowsN;
+      const logo = await logoDataUrl();
       const brandFs = (() => { let fs = 7; doc.setFont("helvetica", "bold"); doc.setFontSize(fs); while (fs > 4 && doc.getTextWidth("SAPPY LEGACY") > cellW - 4) { fs -= 0.5; doc.setFontSize(fs); } return fs; })();
       const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
       const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
@@ -160,6 +161,7 @@ export default function InventoryClient() {
         const L = labels[i]; const cx = x + cellW / 2;
         doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.4);
         doc.roundedRect(x, y, cellW, cellH, 2.5, 2.5, "S");
+        if (logo) { try { doc.addImage(logo, "PNG", x + 2, y + 2, 8, 8); } catch {} }
         const top = y + 1.5;
         const serialY = y + cellH - 2;
         const nameAreaH = 2 * nameFs * 0.45 + 1;
