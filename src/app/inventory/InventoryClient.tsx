@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Upload, Search, Trash2, QrCode, X, Download, Boxes, Pencil, TrendingUp, TrendingDown, FileSpreadsheet, FileDown, Layers, Check, LayoutGrid } from "lucide-react";
+import { Plus, Upload, Search, Trash2, QrCode, Barcode, X, Download, Boxes, Pencil, TrendingUp, TrendingDown, FileSpreadsheet, FileDown, Layers, Check, LayoutGrid } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { etb, fmtDate, ymd } from "@/lib/format";

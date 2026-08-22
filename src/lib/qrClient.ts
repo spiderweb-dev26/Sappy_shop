@@ -30,10 +30,11 @@ export async function makeQrBlock(text: string): Promise<string> {
 export function buildLabelSvg(name: string, serial: string, qrBlock: string | null): string {
   const n = esc(trim(name || "Item", 26));
   const s = esc(serial || "");
-  const qr = qrBlock ||
-    '<rect x="75" y="84" width="150" height="150" rx="10" fill="none" stroke="#065F46" stroke-opacity="0.35" stroke-dasharray="5 5"/>' +
-    '<text x="150" y="158" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#065F46" fill-opacity="0.6">QR unavailable</text>' +
-    '<text x="150" y="176" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">' + s + "</text>";
+  const qr = qrBlock
+    ? '<image x="50" y="80" width="200" height="80" href="' + qrBlock + '"/>'
+    : '<rect x="75" y="84" width="150" height="150" rx="10" fill="none" stroke="#065F46" stroke-opacity="0.35" stroke-dasharray="5 5"/>' +
+      '<text x="150" y="158" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#065F46" fill-opacity="0.6">Barcode unavailable</text>' +
+      '<text x="150" y="176" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">' + s + "</text>";
   return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 300 360" width="300" height="360">' +
     '<defs><clipPath id="lc"><rect width="300" height="360" rx="18"/></clipPath></defs>' +
     '<g clip-path="url(#lc)">' +
