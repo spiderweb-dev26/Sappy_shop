@@ -44,6 +44,8 @@ export default function InventoryClient() {
   const [keptIds, setKeptIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [qtySet, setQtySet] = useState<Set<string>>(new Set());
+  const toggleQty = (id: string) => setQtySet((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const [grid, setGrid] = useState("3x7");
   const [sheetBusy, setSheetBusy] = useState(false);
   const [labelUrl, setLabelUrl] = useState("");
@@ -138,7 +140,8 @@ export default function InventoryClient() {
     if (!ordered.length) return;
     setSheetBusy(true);
     try {
-      const labels = ordered.map((i: any) => ({ name: i.name, serial: i.serial }));
+      const labels: { name: string; serial: string }[] = [];
+      for (const i of ordered as any[]) { const n = qtySet.has(i.id) ? Math.max(1, Number(i.quantity) || 1) : 1; for (let k = 0; k < n; k++) labels.push({ name: i.name, serial: i.serial }); }
       const cols = parseInt(grid, 10) || 3;
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const m = 6, g = 2, pW = 210, pH = 297;
@@ -242,7 +245,8 @@ export default function InventoryClient() {
   }
   const actions = (i: Item) => (
     <div className="flex items-center gap-1">
-      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Barcode style={{ width: 16, height: 16 }} /></button>
+      <button onClick={() => toggleQty(i.id)} title={qtySet.has(i.id) ? "Print one label per unit" : "Print 1 label"} className={`rounded-lg px-2 py-1.5 text-[11px] font-bold transition ${qtySet.has(i.id) ? "bg-emerald-600 text-white" : "text-emerald-700 hover:bg-mint/50"}`}>{qtySet.has(i.id) ? `×${i.quantity}` : "×1"}</button>
+                      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Barcode style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openEdit(i)} title="Edit" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Pencil style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openDelete(i)} title="Delete" className="rounded-lg p-2 text-emerald-600/70 transition hover:bg-red-50 hover:text-red-600 active:scale-90"><Trash2 style={{ width: 16, height: 16 }} /></button>
     </div>
@@ -371,7 +375,7 @@ export default function InventoryClient() {
                 {i.notes && <p className="mt-2 line-clamp-2 text-xs text-emerald-900/55">{i.notes}</p>}
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <CellStat label="Cost" value={i.costUnknown ? "unknown" : i.purchaseValue != null ? etb(i.purchaseValue) : "-"} danger={i.costUnknown} />
-                  <CellStat label="Qty" value={String(i.quantity)} />
+                  <button onClick={() => toggleQty(i.id)} className={`rounded-xl border px-2 py-1.5 text-center transition ${qtySet.has(i.id) ? "border-emerald-600 bg-emerald-600 text-white" : "border-emerald-100 bg-white"}`}><div className="text-[10px] uppercase tracking-wide opacity-70">Qty</div><div className="text-sm font-bold">{qtySet.has(i.id) ? `×${i.quantity}` : i.quantity}</div></button>
                   <CellStat label="Location" value={i.location || "-"} />
                 </div>
                 {!selectMode && <div className="mt-3 flex items-center justify-end border-t border-emerald-50 pt-2">{actions(i)}</div>}
@@ -397,6 +401,7 @@ export default function InventoryClient() {
                     <td className="px-5 py-3.5 text-right font-bold text-emerald-deep">{i.quantity}</td>
                     <td className="hidden px-5 py-3.5 text-emerald-900/70 md:table-cell">{i.location || <span className="text-emerald-300">-</span>}</td>
                     <td className="px-5 py-3.5"><div className="flex items-center justify-end gap-1">
+                      <button onClick={() => toggleQty(i.id)} title={qtySet.has(i.id) ? "Print one label per unit" : "Print 1 label"} className={`rounded-lg px-2 py-1.5 text-[11px] font-bold transition ${qtySet.has(i.id) ? "bg-emerald-600 text-white" : "text-emerald-700 hover:bg-mint/50"}`}>{qtySet.has(i.id) ? `×${i.quantity}` : "×1"}</button>
                       <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep hover:scale-110"><Barcode style={{ width: 16, height: 16 }} /></button>
                       <button onClick={() => openEdit(i)} title="Edit" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep hover:scale-110"><Pencil style={{ width: 16, height: 16 }} /></button>
                       <button onClick={() => openDelete(i)} title="Delete" className="rounded-lg p-2 text-emerald-600/70 transition hover:bg-red-50 hover:text-red-600 hover:scale-110"><Trash2 style={{ width: 16, height: 16 }} /></button>
