@@ -25,6 +25,14 @@ export async function POST(req: Request) {
     if (b.date) { const d = new Date(b.date + "T00:00:00"); if (!isNaN(d.getTime())) { const now = new Date(); d.setHours(now.getHours(), now.getMinutes(), now.getSeconds()); createdAt = d; } }
     const saleNo = "S-" + Date.now().toString(36).toUpperCase().slice(-6) + Math.random().toString(36).toUpperCase().slice(2, 4);
     const sale = await withRetry(() => prisma.sale.create({ data: { saleNo, itemId: b.itemId || null, itemName: String(b.name || b.itemName || "Item"), serial: String(b.serial || ""), quantity, unitPrice, discount, total, paymentMethod: b.paymentMethod || null, note: b.note || null, backdated, userId: uid, ...(createdAt ? { createdAt } : {}) }, include: { user: { select: { name: true, email: true } } } }));
+    if (b.itemId) {
+      try {
+        await withRetry(() => prisma.$transaction(async (tx: any) => {
+          const item = await tx.inventoryItem.findUnique({ where: { id: b.itemId } });
+          if (item) await tx.inventoryItem.update({ where: { id: b.itemId }, data: { quantity: Math.max(0, item.quantity - quantity) } });
+        }));
+      } catch {}
+    }
     return NextResponse.json({ sale }, { status: 201 });
   } catch (e: any) { return NextResponse.json({ error: (e?.message || "Server error").slice(0, 300) }, { status: 500 }); }
 }

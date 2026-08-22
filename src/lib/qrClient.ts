@@ -1,39 +1,32 @@
 "use client";
 import QRCode from "qrcode";
 
-export async function makeQrBlock(text: string): Promise<string | null> {
-  // 1) pure SVG, no canvas
-  try {
-    const svg = await QRCode.toString(text, { type: "svg", margin: 1 });
-    const m = /<svg[^>]*viewBox="0 0 (\d+) (\d+)"[^>]*>([\s\S]*)<\/svg>/.exec(svg);
-    if (m) {
-      const size = parseInt(m[1], 10) || 0;
-      if (size > 0) {
-        const inner = m[3].replace(/#000000/g, "#065F46").replace(/#000/g, "#065F46");
-        const s = (150 / size).toFixed(4);
-        return '<rect x="75" y="84" width="150" height="150" fill="#ffffff"/><g transform="translate(75,84) scale(' + s + ')">' + inner + "</g>";
-      }
+const C39: Record<string, string> = {
+  "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
+  "A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn",
+  "K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn",
+  "U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnnwnnnn","Z":"nwwnwnnnn",
+  "-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","*":"nwnnwnwnn",
+  "$":"nwnwnwnnn","/":"nwnwnnnwn","+":"nwnnnwnwn","%":"nnnwnwnwn"
+};
+function code39Svg(text: string): string {
+  const s = ("*" + (text || "").toUpperCase() + "*");
+  let x = 8; const narrow = 2, wide = 5, h = 70; const bars: string[] = [];
+  for (const ch of s) {
+    const p = C39[ch] || C39["-"];
+    for (let i = 0; i < 9; i++) {
+      const w = p[i] === "w" ? wide : narrow;
+      if (i % 2 === 0) bars.push(`<rect x="${x}" y="8" width="${w}" height="${h}" fill="#000"/>`);
+      x += w + 1;
     }
-  } catch {}
-  // 2) PNG data URL
-  try {
-    const url = await QRCode.toDataURL(text, { errorCorrectionLevel: "M", margin: 1, width: 300, color: { dark: "#065F46", light: "#ffffff" } });
-    if (typeof url === "string") return '<image x="75" y="84" width="150" height="150" href="' + url + '" xlink:href="' + url + '" preserveAspectRatio="xMidYMid meet"/>';
-  } catch {}
-  // 3) last resort: remote QR image (renders because the SVG is inlined in the DOM)
-  return '<image x="75" y="84" width="150" height="150" href="https://api.qrserver.com/create-qr-code/?size=300x300&margin=0&color=065F46&bgcolor=ffffff&data=' + encodeURIComponent(text) + '" preserveAspectRatio="xMidYMid meet"/>';
+    x += 2;
+  }
+  const W = x + 8;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${h + 30}" width="${W}" height="${h + 30}"><rect width="${W}" height="${h + 30}" fill="#fff"/>${bars.join("")}<text x="${W / 2}" y="${h + 24}" font-family="monospace" font-size="12" text-anchor="middle" fill="#000">${text}</text></svg>`;
 }
-
-export async function makeQrDataUrl(text: string): Promise<string | null> {
-  try {
-    const url = await QRCode.toDataURL(text, { errorCorrectionLevel: "M", margin: 1, width: 300, color: { dark: "#065F46", light: "#ffffff" } });
-    return typeof url === "string" ? url : null;
-  } catch { return null; }
+export async function makeQrBlock(text: string): Promise<string> {
+  try { return "data:image/svg+xml;utf8," + encodeURIComponent(code39Svg(text)); } catch { return ""; }
 }
-
-const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
-
 export function buildLabelSvg(name: string, serial: string, qrBlock: string | null): string {
   const n = esc(trim(name || "Item", 26));
   const s = esc(serial || "");
