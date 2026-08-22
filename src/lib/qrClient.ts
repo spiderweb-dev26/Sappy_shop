@@ -32,7 +32,7 @@ export function barcodeDataUrl(text: string): string {
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 export async function makeQrBlock(text: string): Promise<string> { return barcodeDataUrl(text); }
-export async function makeQrDataUrl(text: string): Promise<string> { return barcodeDataUrl(text); }
+export async function makeQrDataUrl(text: string): Promise<string> { return svgToPng(barcodeSvg(text)); }
 
 export function buildLabelSvg(name: string, serial: string, _qr?: string | null): string {
   const n = esc(trim(name || "Item", 26));
@@ -51,4 +51,15 @@ export function buildLabelSvg(name: string, serial: string, _qr?: string | null)
     '</g>' +
     '<rect x="1" y="1" width="418" height="178" rx="15" fill="none" stroke="#065F46" stroke-width="2"/>' +
     '</svg>';
+}
+export function barcodeSvg(text: string): string {
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="400" height="100"><rect width="400" height="100" fill="#fff"/>' + bars39(text || "", 10, 8, 66, 380) + '<text x="200" y="92" text-anchor="middle" font-family="monospace" font-size="12" fill="#111">' + esc(text || "") + '</text></svg>';
+}
+function svgToPng(svg: string): Promise<string> {
+  return new Promise((res) => {
+    const img = new Image();
+    img.onload = () => { const c = document.createElement("canvas"); c.width = 800; c.height = 200; const x = c.getContext("2d")!; x.fillStyle = "#fff"; x.fillRect(0, 0, 800, 200); x.drawImage(img, 0, 0, 800, 200); res(c.toDataURL("image/png")); };
+    img.onerror = () => res("");
+    img.src = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+  });
 }

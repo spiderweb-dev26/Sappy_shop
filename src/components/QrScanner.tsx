@@ -2,6 +2,35 @@
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import { X } from "lucide-react";
+const C39: Record<string, string> = {
+  "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
+  "A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn",
+  "K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn",
+  "U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnnwnnnn","Z":"nwwnwnnnn",
+  "-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","*":"nwnnwnwnn"
+};
+const REV: Record<string, string> = {}; for (const k in C39) REV[C39[k]] = k;
+function decodeRow(bin: number[]): string | null {
+  const runs: { v: number; len: number }[] = [];
+  for (let i = 0; i < bin.length; i++) { const v = bin[i]; if (runs.length && runs[runs.length - 1].v === v) runs[runs.length - 1].len++; else runs.push({ v, len: 1 }); }
+  for (let s = 0; s < runs.length; s++) {
+    if (runs[s].v !== 1) continue;
+    let out = ""; let i = s; let ok = true;
+    while (i + 8 < runs.length) {
+      const g = runs.slice(i, i + 9); let alt = true;
+      for (let k = 0; k < 9; k++) if (g[k].v !== (k % 2 === 0 ? 1 : 0)) { alt = false; break; }
+      if (!alt) { ok = false; break; }
+      const lens = g.map((r) => r.len); const so = [...lens].sort((a, b) => a - b); const thr = (so[5] + so[6]) / 2;
+      let pat = ""; for (let k = 0; k < 9; k++) pat += lens[k] > thr ? "w" : "n";
+      if ((pat.match(/w/g) || []).length !== 3) { ok = false; break; }
+      const ch = REV[pat]; if (!ch) { ok = false; break; }
+      out += ch; i += 9; if (i < runs.length && runs[i].v === 0) i += 1;
+      if (ch === "*" && out.length > 1) break;
+    }
+    if (ok && out.length >= 3 && out.startsWith("*") && out.endsWith("*")) { const b = out.slice(1, -1); if (b.length >= 2) return b; }
+  }
+  return null;
+}
 export default function QrScanner({ onScan, onClose }: { onScan: (s: string) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null); const [err, setErr] = useState("");
   useEffect(() => {
@@ -9,10 +38,18 @@ export default function QrScanner({ onScan, onClose }: { onScan: (s: string) => 
     const tick = () => {
       const v = videoRef.current;
       if (v && v.readyState === v.HAVE_ENOUGH_DATA) {
-        const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
-        const ctx = c.getContext("2d")!; ctx.drawImage(v, 0, 0, c.width, c.height);
-        const code = jsQR(ctx.getImageData(0, 0, c.width, c.height).data, c.width, c.height, { inversionAttempts: "dontInvert" });
-        if (code?.data) { stopped = true; onScan(code.data.trim()); return; }
+        const W = 640, H = Math.max(1, Math.round((640 * v.videoHeight) / v.videoWidth));
+        const c = document.createElement("canvas"); c.width = W; c.height = H;
+        const x = c.getContext("2d")!; x.drawImage(v, 0, 0, W, H);
+        const d = x.getImageData(0, 0, W, H).data;
+        for (const f of [0.42, 0.46, 0.5, 0.54, 0.58]) {
+          const y = Math.floor(H * f); const row = new Array(W); let sum = 0;
+          for (let px = 0; px < W; px++) { const o = (y * W + px) * 4; const g = (d[o] + d[o + 1] + d[o + 2]) / 3; row[px] = g; sum += g; }
+          const avg = sum / W; const bin = row.map((g) => (g < avg * 0.92 ? 1 : 0));
+          const s = decodeRow(bin); if (s) { stopped = true; onScan(s); return; }
+        }
+        const q = jsQR(d, W, H, { inversionAttempts: "dontInvert" });
+        if (q?.data) { stopped = true; onScan(q.data.trim()); return; }
       }
       if (!stopped) raf = requestAnimationFrame(tick);
     };
@@ -26,14 +63,13 @@ export default function QrScanner({ onScan, onClose }: { onScan: (s: string) => 
       <div className="absolute inset-0 bg-emerald-900/60 backdrop-blur-sm" />
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-emerald-100 bg-cream p-3 shadow-2xl">
         <div className="mb-3 flex items-center justify-between px-1">
-          <div><div className="font-display text-lg font-black text-emerald-deep">Scan QR</div><div className="text-[11px] uppercase tracking-[0.16em] text-emerald-600/70">Point at a label</div></div>
+          <div><div className="font-display text-lg font-black text-emerald-deep">Scan barcode</div><div className="text-[11px] uppercase tracking-[0.16em] text-emerald-600/70">Hold the label level</div></div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-emerald-600 hover:bg-mint/50"><X style={{ width: 18, height: 18 }} /></button>
         </div>
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-black">
+        <div className="relative aspect-video overflow-hidden rounded-2xl bg-black">
           <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
-          <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-mint/70" />
-          <div className="pointer-events-none absolute left-6 right-6 h-0.5 bg-mint shadow-[0_0_12px_2px_rgba(167,243,208,0.8)] animate-scanline" />
-          {["left-4 top-4 border-l-2 border-t-2", "right-4 top-4 border-r-2 border-t-2", "left-4 bottom-4 border-l-2 border-b-2", "right-4 bottom-4 border-r-2 border-b-2"].map((c) => <span key={c} className={`pointer-events-none absolute h-6 w-6 border-mint ${c}`} />)}
+          <div className="pointer-events-none absolute inset-x-6 inset-y-10 rounded-xl border-2 border-mint/70" />
+          <div className="pointer-events-none absolute left-6 right-6 top-1/2 h-0.5 bg-mint shadow-[0_0_12px_2px_rgba(167,243,208,0.8)] animate-scanline" />
         </div>
         {err && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-600">{err}</p>}
       </div>
