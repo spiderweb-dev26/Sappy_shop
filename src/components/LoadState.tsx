@@ -69,7 +69,7 @@ export function PageSkeleton() {
       <div className="fixed inset-0 z-[90] flex items-center justify-center bg-cream/70 backdrop-blur-[3px]" aria-busy="true">
         <div className="w-[min(90vw,420px)] rounded-3xl border border-emerald-100 bg-white/95 p-6 shadow-lift">
           <div className="mb-5 flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-emerald-100"><img src="/logo.svg?v=2" alt="" className="h-9 w-9" /></span>
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-emerald-100"><img src="/img/logo.png" alt="" className="h-9 w-9" /></span>
             <div><div className="font-display text-lg font-black leading-tight text-emerald-deep">Sappy Legacy</div><div className="text-[11px] text-emerald-900/55">Hold tight — fetching your numbers.</div></div>
           </div>
           <ProgressLoader />

@@ -27,7 +27,7 @@ export default function MobileNav() {
     <>
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-emerald-100 bg-cream/85 px-4 backdrop-blur-md md:hidden">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-soft ring-1 ring-emerald-100"><img src="/logo.svg?v=2" alt="Sappy Legacy" className="h-7 w-7" /></span>
+          <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-white shadow-soft ring-1 ring-emerald-100"><img src="/img/logo.png" alt="Sappy Legacy" className="h-7 w-7" /></span>
           <span className="font-display text-[15px] font-black tracking-tight text-emerald-deep">Sappy Legacy</span>
         </Link>
         <button onClick={() => setSheet(true)} className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-deep text-sm font-black text-mint shadow-soft transition active:scale-90">{initial}</button>

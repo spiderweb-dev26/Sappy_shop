@@ -34,7 +34,7 @@ export default function Login() {
       <div className="flex min-h-screen items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm rounded-2xl border border-emerald-100 bg-white/90 p-7 shadow-soft backdrop-blur">
           <div className="mb-6 flex flex-col items-center text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-emerald-100"><img src="/logo.svg?v=2" alt="Sappy Legacy" className="h-12 w-12" /></div>
+            <div className="mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-emerald-100"><img src="/img/logo.png" alt="Sappy Legacy" className="h-12 w-12" /></div>
             <h1 className="font-display text-3xl font-black tracking-tight text-emerald-deep">Welcome back</h1>
             <p className="mt-1 text-sm text-emerald-900/55">Sign in to Sappy Legacy</p>
           </div>
@@ -58,7 +58,7 @@ export default function Login() {
               initial={{ backgroundPosition: "120% 0" }} animate={{ backgroundPosition: "-20% 0" }} transition={{ duration: 1.3, ease: "easeInOut" }} />
             <div className="relative px-6 text-center">
               <motion.div initial={{ scale: 0.5, opacity: 0, y: 24 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 220, damping: 18 }} className="mx-auto mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl bg-white shadow-lift">
-                <img src="/logo.svg?v=2" alt="" className="h-16 w-16" />
+                <img src="/img/logo.png" alt="" className="h-16 w-16" />
               </motion.div>
               <motion.p initial={{ opacity: 0, x: -48 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15, duration: 0.5, ease: "easeOut" }} className="text-xs font-bold uppercase tracking-[0.4em] text-mint/80">Welcome</motion.p>
               <motion.h1 initial={{ opacity: 0, y: 26, clipPath: "inset(0 100% 0 0)" }} animate={{ opacity: 1, y: 0, clipPath: "inset(0 0% 0 0)" }} transition={{ delay: 0.28, duration: 0.65, ease: [0.22, 1, 0.36, 1] }} className="mt-2 font-display text-4xl font-black tracking-tight text-mint md:text-6xl">{welcome}</motion.h1>

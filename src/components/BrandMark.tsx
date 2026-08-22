@@ -2,7 +2,7 @@
 export default function BrandMark({ size = 40, tile = false, className = "" }: { size?: number; tile?: boolean; className?: string }) {
   const dim = tile ? Math.round(size * 0.74) : size;
   const img = (
-    <img src="/logo.svg?v=1" alt="Sappy Legacy" width={dim} height={dim} draggable={false}
+    <img src="/img/logo.png" alt="Sappy Legacy" width={dim} height={dim} draggable={false}
       className="relative select-none transition-transform duration-500 ease-out group-hover/bm:scale-110 group-hover/bm:-rotate-6" />
   );
   if (!tile) {

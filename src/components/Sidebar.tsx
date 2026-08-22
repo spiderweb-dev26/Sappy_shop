@@ -53,7 +53,7 @@ export default function Sidebar() {
     <>
       <nav aria-label="Primary" className="fixed left-1/2 top-4 z-40 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-emerald-700/40 bg-emerald-deep/95 px-2 py-2 shadow-lift backdrop-blur md:flex">
         <Link href="/dashboard" title="Dashboard" className="mr-1 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-soft ring-1 ring-emerald-100 transition hover:scale-105 active:scale-95">
-          <img src="/logo.svg?v=2" alt="Sappy Legacy" className="h-9 w-9" draggable={false} />
+          <img src="/img/logo.png" alt="Sappy Legacy" className="h-9 w-9" draggable={false} />
         </Link>
         {links.map(({ href, label, Icon }) => {
           const active = pathname?.startsWith(href);
