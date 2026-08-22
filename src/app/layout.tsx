@@ -10,7 +10,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 export const metadata: Metadata = {
   title: "Sappy Legacy",
   description: "Inventory, sales & purchase orders",
-  icons: { icon: [{ url: "/favicon.svg?v=1", type: "image/svg+xml" }], apple: [{ url: "/favicon.svg?v=1" }] },
+  icons: { icon: [{ url: "/img/logo.png", type: "image/png" }], apple: [{ url: "/img/logo.png" }] },
 };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
