@@ -19,7 +19,7 @@ function bars39(text: string, x0: number, y0: number, h: number, targetW: number
     for (let i = 0; i < 9; i++) {
       const w = p[i] === "w" ? r : 1;
       if (i % 2 === 0) rects.push(`<rect x="${x}" y="0" width="${w}" height="${h}" fill="#111"/>`);
-      x += w + 0.5;
+      x += w;
     }
     x += 1;
   }
