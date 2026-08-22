@@ -50,11 +50,7 @@ export default function InventoryClient() {
   useEffect(() => {
     let alive = true;
     if (!label) { setLabelUrl(""); return; }
-    (async () => {
-      const block = await makeQrBlock(label.serial);
-      const svg = buildLabelSvg(label.name, label.serial, block);
-      if (alive) setLabelUrl(svg);
-    })();
+    try { const svg = buildLabelSvg(label.name, label.serial, barcodeDataUrl(label.serial)); setLabelUrl(svg); } catch { setLabelUrl(""); }
     return () => { alive = false; };
   }, [label]);
   useEffect(() => { setKeptIds(new Set()); }, [res.data]);
@@ -247,7 +243,7 @@ export default function InventoryClient() {
   }
   const actions = (i: Item) => (
     <div className="flex items-center gap-1">
-      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><QrCode style={{ width: 16, height: 16 }} /></button>
+      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Barcode style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openEdit(i)} title="Edit" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Pencil style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openDelete(i)} title="Delete" className="rounded-lg p-2 text-emerald-600/70 transition hover:bg-red-50 hover:text-red-600 active:scale-90"><Trash2 style={{ width: 16, height: 16 }} /></button>
     </div>
@@ -402,7 +398,7 @@ export default function InventoryClient() {
                     <td className="px-5 py-3.5 text-right font-bold text-emerald-deep">{i.quantity}</td>
                     <td className="hidden px-5 py-3.5 text-emerald-900/70 md:table-cell">{i.location || <span className="text-emerald-300">-</span>}</td>
                     <td className="px-5 py-3.5"><div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep hover:scale-110"><QrCode style={{ width: 16, height: 16 }} /></button>
+                      <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep hover:scale-110"><Barcode style={{ width: 16, height: 16 }} /></button>
                       <button onClick={() => openEdit(i)} title="Edit" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep hover:scale-110"><Pencil style={{ width: 16, height: 16 }} /></button>
                       <button onClick={() => openDelete(i)} title="Delete" className="rounded-lg p-2 text-emerald-600/70 transition hover:bg-red-50 hover:text-red-600 hover:scale-110"><Trash2 style={{ width: 16, height: 16 }} /></button>
                     </div></td>
@@ -464,7 +460,7 @@ export default function InventoryClient() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setLabel(null)}>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-emerald-900/40 backdrop-blur-sm" />
           <motion.div initial={{ opacity: 0, scale: 0.96, y: 14 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 14 }} onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92vh] w-full max-w-[min(92vw,900px)] flex-col overflow-hidden rounded-2xl border border-emerald-100 bg-white p-4 text-center shadow-2xl">
-            <div className="mb-3 flex items-center justify-between"><h2 className="font-display text-sm font-black text-emerald-deep">QR Label</h2><button onClick={() => setLabel(null)} className="rounded-lg p-1.5 text-emerald-500 hover:bg-mint/40"><X style={{ width: 16, height: 16 }} /></button></div>
+            <div className="mb-3 flex items-center justify-between"><h2 className="font-display text-sm font-black text-emerald-deep">Item Label</h2><button onClick={() => setLabel(null)} className="rounded-lg p-1.5 text-emerald-500 hover:bg-mint/40"><X style={{ width: 16, height: 16 }} /></button></div>
             <div className="group/qr relative mx-auto flex min-h-0 w-full flex-1 items-center justify-center">
               <div aria-hidden className="pointer-events-none absolute -inset-2 rounded-2xl bg-mint/30 opacity-0 blur-xl transition-opacity duration-500 group-hover/qr:opacity-100" />
               <div className="relative overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-emerald-100">

@@ -54,3 +54,4 @@ export function buildLabelSvg(name: string, serial: string, qrBlock: string | nu
 export async function makeQrDataUrl(text: string): Promise<string> {
   return makeQrBlock(text);
 }
+export function barcodeDataUrl(text: string): string { try { return "data:image/svg+xml;utf8," + encodeURIComponent(code39Svg(text)); } catch { return ""; } }
