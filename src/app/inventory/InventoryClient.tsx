@@ -19,7 +19,7 @@ const EM = [6, 95, 70] as [number, number, number];
 const MINT = [167, 243, 208] as [number, number, number];
 const CREAM = [255, 248, 231] as [number, number, number];
 const normName = (s?: string | null) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
-const GRIDS = ["2x2", "3x3", "4x3", "5x3", "5x4", "6x6", "8x8", "10x10", "12x12"];
+const GRIDS = ["2x5", "3x7", "4x9"];
 
 function triggerDownload(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -44,7 +44,7 @@ export default function InventoryClient() {
   const [keptIds, setKeptIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [grid, setGrid] = useState("5x3");
+  const [grid, setGrid] = useState("3x7");
   const [sheetBusy, setSheetBusy] = useState(false);
   const [labelUrl, setLabelUrl] = useState("");
   useEffect(() => { if (!label) { setLabelUrl(""); return; } try { setLabelUrl(buildLabelSvg(label.name, label.serial, barcodeDataUrl(label.serial))); } catch { setLabelUrl(""); } }, [label]);
@@ -139,12 +139,13 @@ export default function InventoryClient() {
     setSheetBusy(true);
     try {
       const labels = ordered.map((i: any) => ({ name: i.name, serial: i.serial }));
-      const [cols, rowsN] = grid.split("x").map((n) => parseInt(n, 10));
+      const cols = parseInt(grid, 10) || 3;
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const m = 6, g = 2, pW = 210, pH = 297;
       const uW = pW - 2 * m, uH = pH - 2 * m;
       const cellW = (uW - (cols - 1) * g) / cols;
-      const cellH = (uH - (rowsN - 1) * g) / rowsN;
+      const cellH = Math.min(60, Math.max(26, cellW / 2.2));
+      const rowsN = Math.max(1, Math.floor((uH + g) / (cellH + g)));
       const per = cols * rowsN;
       const brandFs = (() => { let fs = 7; doc.setFont("helvetica", "bold"); doc.setFontSize(fs); while (fs > 4 && doc.getTextWidth("SAPPY LEGACY") > cellW - 4) { fs -= 0.5; doc.setFontSize(fs); } return fs; })();
       const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
