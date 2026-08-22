@@ -161,10 +161,12 @@ export default function InventoryClient() {
         const png = await makeQrDataUrl(L.serial);
         if (png) { try { doc.addImage(png, "PNG", x + 2, yCur, bw, bh); } catch {} }
         yCur += bh + 1.5;
-        const nameFs = fit(String(L.name || "Item"), cellW >= 60 ? 12 : 10, cellW - 4, 5);
+        let nameFs = cellW >= 60 ? 12 : 10;
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
-        doc.text(String(L.name || "Item"), cx, yCur + nameFs * 0.4, { align: "center" });
-        yCur += nameFs * 0.5 + 1.5;
+        let nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5);
+        while (nameLines.length > 2 && nameFs > 6) { nameFs -= 1; doc.setFontSize(nameFs); nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5); }
+        doc.text(nameLines, cx, yCur + nameFs * 0.4, { align: "center" });
+        yCur += nameLines.length * nameFs * 0.45 + 1.5;
         const serFs = fit(String(L.serial || ""), 8, cellW - 4, 5);
         doc.setFont("courier", "normal"); doc.setFontSize(serFs); doc.setTextColor(4, 120, 87);
         doc.text(String(L.serial || ""), cx, yCur + serFs * 0.35, { align: "center" });
