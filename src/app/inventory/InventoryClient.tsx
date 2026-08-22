@@ -10,7 +10,7 @@ import { PageSkeleton, ErrorBanner, Spinner } from "@/components/LoadState";
 import { Counter } from "@/components/Stat";
 import MasterModal from "@/components/MasterModal";
 import ImportGuideModal from "@/components/ImportGuideModal";
-import { makeQrDataUrl, makeQrBlock, buildLabelSvg } from "@/lib/qrClient";
+import { makeQrDataUrl, makeQrBlock, buildLabelSvg, barcodeDataUrl } from "@/lib/qrClient";
 type U = { name?: string | null; email?: string } | null;
 type Item = { id: string; serial: string; name: string; category: string | null; quantity: number; location: string | null; notes: string | null; purchaseValue: number | null; sellingPrice: number | null; costUnknown: boolean; dupKeptAt?: string | null; dupKeptBy?: string | null; createdAt: string; user?: U };
 const inp = "w-full rounded-xl border border-emerald-200 bg-white px-3.5 py-2.5 text-sm text-emerald-900 placeholder:text-emerald-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200";
@@ -47,12 +47,7 @@ export default function InventoryClient() {
   const [grid, setGrid] = useState("5x3");
   const [sheetBusy, setSheetBusy] = useState(false);
   const [labelUrl, setLabelUrl] = useState("");
-  useEffect(() => {
-    let alive = true;
-    if (!label) { setLabelUrl(""); return; }
-    try { const svg = buildLabelSvg(label.name, label.serial, barcodeDataUrl(label.serial)); setLabelUrl(svg); } catch { setLabelUrl(""); }
-    return () => { alive = false; };
-  }, [label]);
+  useEffect(() => { if (!label) { setLabelUrl(""); return; } try { setLabelUrl(buildLabelSvg(label.name, label.serial, barcodeDataUrl(label.serial))); } catch { setLabelUrl(""); } }, [label]);
   useEffect(() => { setKeptIds(new Set()); }, [res.data]);
   useEffect(() => { if (masterStatus.data) setMasterSet(!!masterStatus.data.set); }, [masterStatus.data]);
   useEffect(() => { const h = () => masterStatus.reload(); window.addEventListener("sl:master-changed", h); return () => window.removeEventListener("sl:master-changed", h); }, []);
