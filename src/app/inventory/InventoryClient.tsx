@@ -136,46 +136,41 @@ export default function InventoryClient() {
 
   async function downloadSheet() {
     if (!ordered.length) return;
-    setSheetBusy(true); flash("", "ok");
+    setSheetBusy(true);
     try {
-      const labels: { id: string; name: string; serial: string; qr: string | null }[] = [];
-      for (const i of ordered) labels.push({ id: i.id, name: i.name, serial: i.serial, qr: await makeQrDataUrl(i.serial) });
-      if (!labels.length) throw new Error("No labels returned");
-      const [cols] = grid.split("x").map((n) => parseInt(n, 10));
+      const labels = ordered.map((i: any) => ({ name: i.name, serial: i.serial }));
+      const [cols, rowsN] = grid.split("x").map((n) => parseInt(n, 10));
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-      const m = 8, g = 3, pW = 210, pH = 297;
-      const uW = pW - 2 * m, uH = pH - 2 * m - 8;
+      const m = 6, g = 2, pW = 210, pH = 297;
+      const uW = pW - 2 * m, uH = pH - 2 * m;
       const cellW = (uW - (cols - 1) * g) / cols;
-      const cellH = Math.max(30, cellW * 0.42);
-      const rowsN = Math.max(1, Math.floor((uH + g) / (cellH + g)));
+      const cellH = (uH - (rowsN - 1) * g) / rowsN;
       const per = cols * rowsN;
-      const pages = Math.ceil(labels.length / per);
       const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
       const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
+      const brandFs = Math.max(5, Math.round(nameFs * 0.55));
       for (let i = 0; i < labels.length; i++) {
-        const pIdx = Math.floor(i / per);
         if (i > 0 && i % per === 0) doc.addPage();
-        if (i % per === 0) { doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(120, 120, 120); doc.text(`Sappy Legacy  -  ${labels.length} label(s)  -  grid ${grid.replace("x", " x ")}  -  page ${pIdx + 1} of ${pages}`, pW / 2, pH - 4, { align: "center" }); }
         const idx = i % per; const col = idx % cols; const row = Math.floor(idx / cols);
         const x = m + col * (cellW + g); const y = m + row * (cellH + g);
-        doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3); doc.roundedRect(x, y, cellW, cellH, 2, 2, "S");
-        const pad = 2, textH = 9;
-        const bw = cellW - 2 * pad; let bh = bw / 4; if (bh > cellH - 2 * pad - textH) bh = Math.max(6, cellH - 2 * pad - textH);
-        const qrSize = bh; const qrX = x + pad; const qrY = y + pad;
-        const L = labels[i];
-        if (L.qr) { try { doc.addImage(L.qr, "PNG", qrX, qrY, bw, bh); } catch {} }
-        else { doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.2); doc.roundedRect(qrX, qrY, qrSize, qrSize, 1, 1, "S"); doc.setFontSize(5); doc.setTextColor(6, 95, 70); doc.text("QR n/a", x + cellW / 2, qrY + qrSize / 2, { align: "center" }); }
-        const nameY = qrY + qrSize + 3.2;
+        const L = labels[i]; const pad = 1.5;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(brandFs); doc.setTextColor(6, 95, 70);
+        doc.text("SAPPY LEGACY", x + cellW / 2, y + pad + brandFs * 0.35, { align: "center" });
+        const bw = cellW - 2 * pad;
+        const bh = Math.min(bw / 4, cellH * 0.42);
+        const qrY = y + pad + brandFs * 0.5 + 1;
+        const png = await makeQrDataUrl(L.serial);
+        if (png) { try { doc.addImage(png, "PNG", x + pad, qrY, bw, bh); } catch {} }
+        const nameY = qrY + bh + nameFs * 0.45;
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
-        const nameLines = doc.splitTextToSize(L.name || "", cellW - 2 * pad);
-        doc.text(nameLines.slice(0, 2), x + cellW / 2, nameY, { align: "center" });
+        doc.text(String(L.name || "Item").slice(0, cellW >= 60 ? 26 : cellW >= 44 ? 20 : 14), x + cellW / 2, nameY, { align: "center" });
         doc.setFont("courier", "normal"); doc.setFontSize(serFs); doc.setTextColor(4, 120, 87);
-        doc.text(String(L.serial || ""), x + cellW / 2, nameY + (nameLines.length > 1 ? 3.4 : 3.0) + 2.2, { align: "center" });
+        doc.text(String(L.serial || ""), x + cellW / 2, nameY + nameFs * 0.5, { align: "center" });
       }
-      doc.save(`sappy-legacy-labels-${ymd(new Date())}-${grid}.pdf`);
-      flash(`Downloaded ${labels.length} label(s) as a ${grid.replace("x", " x ")} A4 sheet.`, "ok");
-    } catch (e: any) { flash(e?.message || "Could not build sheet", "err"); }
-    finally { setSheetBusy(false); }
+      doc.save("sappy-legacy-labels.pdf");
+      flash(`Exported ${labels.length} label(s).`, "ok");
+    } catch { flash("Label export failed.", "err"); }
+    setSheetBusy(false); }
   }
 
   async function keepOne(i: Item) {
