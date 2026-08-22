@@ -158,10 +158,10 @@ export default function InventoryClient() {
         const x = m + col * (cellW + g); const y = m + row * (cellH + g);
         doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3); doc.roundedRect(x, y, cellW, cellH, 2, 2, "S");
         const pad = 2, textH = 9;
-        const qrSize = Math.max(8, Math.min(cellW - 2 * pad, cellH - 2 * pad - textH));
-        const qrX = x + (cellW - qrSize) / 2; const qrY = y + pad;
+        const bw = cellW - 2 * pad; let bh = bw / 4; if (bh > cellH - 2 * pad - textH) bh = Math.max(6, cellH - 2 * pad - textH);
+        const qrSize = bh; const qrX = x + pad; const qrY = y + pad;
         const L = labels[i];
-        if (L.qr) { try { doc.addImage(L.qr, "PNG", qrX, qrY, qrSize, qrSize); } catch {} }
+        if (L.qr) { try { doc.addImage(L.qr, "PNG", qrX, qrY, bw, bh); } catch {} }
         else { doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.2); doc.roundedRect(qrX, qrY, qrSize, qrSize, 1, 1, "S"); doc.setFontSize(5); doc.setTextColor(6, 95, 70); doc.text("QR n/a", x + cellW / 2, qrY + qrSize / 2, { align: "center" }); }
         const nameY = qrY + qrSize + 3.2;
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
