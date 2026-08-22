@@ -19,7 +19,7 @@ const EM = [6, 95, 70] as [number, number, number];
 const MINT = [167, 243, 208] as [number, number, number];
 const CREAM = [255, 248, 231] as [number, number, number];
 const normName = (s?: string | null) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
-const GRIDS = ["2x5", "3x7", "4x9"];
+const GRIDS = ["2x5", "3x7", "4x9", "4x10"];
 
 function triggerDownload(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
