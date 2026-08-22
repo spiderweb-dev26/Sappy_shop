@@ -146,29 +146,34 @@ export default function InventoryClient() {
       const cellW = (uW - (cols - 1) * g) / cols;
       const cellH = (uH - (rowsN - 1) * g) / rowsN;
       const per = cols * rowsN;
-      const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
-      const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
-      const brandFs = Math.max(5, Math.round(nameFs * 0.55));
+      const fit = (text: string, startFs: number, maxW: number, minFs: number) => { let fs = startFs; doc.setFontSize(fs); while (fs > minFs && doc.getTextWidth(text) > maxW) { fs -= 0.5; doc.setFontSize(fs); } return fs; };
       for (let i = 0; i < labels.length; i++) {
         if (i > 0 && i % per === 0) doc.addPage();
         const idx = i % per; const col = idx % cols; const row = Math.floor(idx / cols);
         const x = m + col * (cellW + g); const y = m + row * (cellH + g);
-        const L = labels[i]; const pad = 1.5;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(brandFs); doc.setTextColor(6, 95, 70);
-        doc.text("SAPPY LEGACY", x + cellW / 2, y + pad + brandFs * 0.35, { align: "center" });
-        const bw = cellW - 2 * pad;
-        const bh = Math.min(bw / 4, cellH * 0.42);
-        const qrY = y + pad + brandFs * 0.5 + 1;
+        const L = labels[i]; const cx = x + cellW / 2;
+        let yCur = y + 2;
+        doc.setFont("helvetica", "bold"); doc.setTextColor(6, 95, 70);
+        const brandFs = fit("SAPPY LEGACY", 7, cellW - 4, 5);
+        doc.text("SAPPY LEGACY", cx, yCur + brandFs * 0.35, { align: "center" });
+        yCur += brandFs * 0.5 + 1.5;
+        const bw = cellW - 4; const bh = Math.min(bw / 4, 14);
         const png = await makeQrDataUrl(L.serial);
-        if (png) { try { doc.addImage(png, "PNG", x + pad, qrY, bw, bh); } catch {} }
-        const nameY = qrY + bh + nameFs * 0.45;
+        if (png) { try { doc.addImage(png, "PNG", x + 2, yCur, bw, bh); } catch {} }
+        yCur += bh + 1.5;
+        const nameFs = fit(String(L.name || "Item"), cellW >= 60 ? 12 : 10, cellW - 4, 5);
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
-        doc.text(String(L.name || "Item").slice(0, cellW >= 60 ? 26 : cellW >= 44 ? 20 : 14), x + cellW / 2, nameY, { align: "center" });
+        doc.text(String(L.name || "Item"), cx, yCur + nameFs * 0.4, { align: "center" });
+        yCur += nameFs * 0.5 + 1.5;
+        const serFs = fit(String(L.serial || ""), 8, cellW - 4, 5);
         doc.setFont("courier", "normal"); doc.setFontSize(serFs); doc.setTextColor(4, 120, 87);
-        doc.text(String(L.serial || ""), x + cellW / 2, nameY + nameFs * 0.5, { align: "center" });
+        doc.text(String(L.serial || ""), cx, yCur + serFs * 0.35, { align: "center" });
+        yCur += serFs * 0.5 + 2;
+        doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.4);
+        doc.roundedRect(x, y, cellW, Math.min(yCur - y, cellH), 2.5, 2.5, "S");
       }
       doc.save("sappy-legacy-labels.pdf");
-      flash(`Exported ${labels.length} label(s).`, "ok");
+      flash("Exported " + labels.length + " label(s).", "ok");
     } catch { flash("Label export failed.", "err"); }
     setSheetBusy(false);
   }
