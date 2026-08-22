@@ -50,3 +50,6 @@ export function buildLabelSvg(name: string, serial: string, qrBlock: string | nu
     '<rect width="300" height="360" rx="18" fill="none" stroke="#065F46" stroke-width="2"/>' +
     "</svg>";
 }
+export async function makeQrDataUrl(text: string): Promise<string> {
+  return makeQrBlock(text);
+}
