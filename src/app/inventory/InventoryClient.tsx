@@ -146,33 +146,30 @@ export default function InventoryClient() {
       const cellW = (uW - (cols - 1) * g) / cols;
       const cellH = (uH - (rowsN - 1) * g) / rowsN;
       const per = cols * rowsN;
-      const fit = (text: string, startFs: number, maxW: number, minFs: number) => { let fs = startFs; doc.setFontSize(fs); while (fs > minFs && doc.getTextWidth(text) > maxW) { fs -= 0.5; doc.setFontSize(fs); } return fs; };
+      const brandFs = 7;
+      const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
+      const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
       for (let i = 0; i < labels.length; i++) {
         if (i > 0 && i % per === 0) doc.addPage();
         const idx = i % per; const col = idx % cols; const row = Math.floor(idx / cols);
         const x = m + col * (cellW + g); const y = m + row * (cellH + g);
         const L = labels[i]; const cx = x + cellW / 2;
+        doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.4);
+        doc.roundedRect(x, y, cellW, cellH, 2.5, 2.5, "S");
         let yCur = y + 2;
-        doc.setFont("helvetica", "bold"); doc.setTextColor(6, 95, 70);
-        const brandFs = fit("SAPPY LEGACY", 7, cellW - 4, 5);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(brandFs); doc.setTextColor(6, 95, 70);
         doc.text("SAPPY LEGACY", cx, yCur + brandFs * 0.35, { align: "center" });
         yCur += brandFs * 0.5 + 1.5;
         const bw = cellW - 4; const bh = Math.min(bw / 4, 14);
         const png = await makeQrDataUrl(L.serial);
         if (png) { try { doc.addImage(png, "PNG", x + 2, yCur, bw, bh); } catch {} }
         yCur += bh + 1.5;
-        let nameFs = cellW >= 60 ? 12 : 10;
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
-        let nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5);
-        while (nameLines.length > 2 && nameFs > 6) { nameFs -= 1; doc.setFontSize(nameFs); nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5); }
+        const nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5);
         doc.text(nameLines, cx, yCur + nameFs * 0.4, { align: "center" });
         yCur += nameLines.length * nameFs * 0.45 + 1.5;
-        const serFs = fit(String(L.serial || ""), 8, cellW - 4, 5);
         doc.setFont("courier", "normal"); doc.setFontSize(serFs); doc.setTextColor(4, 120, 87);
         doc.text(String(L.serial || ""), cx, yCur + serFs * 0.35, { align: "center" });
-        yCur += serFs * 0.5 + 2;
-        doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.4);
-        doc.roundedRect(x, y, cellW, Math.min(yCur - y, cellH), 2.5, 2.5, "S");
       }
       doc.save("sappy-legacy-labels.pdf");
       flash("Exported " + labels.length + " label(s).", "ok");
