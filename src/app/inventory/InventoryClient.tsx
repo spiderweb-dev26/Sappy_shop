@@ -146,7 +146,7 @@ export default function InventoryClient() {
       const cellW = (uW - (cols - 1) * g) / cols;
       const cellH = (uH - (rowsN - 1) * g) / rowsN;
       const per = cols * rowsN;
-      const brandFs = 7;
+      const brandFs = (() => { let fs = 7; doc.setFont("helvetica", "bold"); doc.setFontSize(fs); while (fs > 4 && doc.getTextWidth("SAPPY LEGACY") > cellW - 4) { fs -= 0.5; doc.setFontSize(fs); } return fs; })();
       const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
       const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
       for (let i = 0; i < labels.length; i++) {
