@@ -157,20 +157,22 @@ export default function InventoryClient() {
         const L = labels[i]; const cx = x + cellW / 2;
         doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.4);
         doc.roundedRect(x, y, cellW, cellH, 2.5, 2.5, "S");
-        let yCur = y + 2;
+        const top = y + 1.5;
+        const serialY = y + cellH - 2;
+        const nameAreaH = 2 * nameFs * 0.45 + 1;
+        const nameTop = serialY - serFs * 0.6 - nameAreaH;
+        const barY = top + brandFs * 0.5 + 1;
+        const bh = Math.max(5, nameTop - 1 - barY);
         doc.setFont("helvetica", "bold"); doc.setFontSize(brandFs); doc.setTextColor(6, 95, 70);
-        doc.text("SAPPY LEGACY", cx, yCur + brandFs * 0.35, { align: "center" });
-        yCur += brandFs * 0.5 + 1.5;
-        const bw = cellW - 4; const bh = Math.min(bw / 4, 14);
+        doc.text("SAPPY LEGACY", cx, top + brandFs * 0.4, { align: "center" });
+        const bw = cellW - 4;
         const png = await makeQrDataUrl(L.serial);
-        if (png) { try { doc.addImage(png, "PNG", x + 2, yCur, bw, bh); } catch {} }
-        yCur += bh + 1.5;
+        if (png) { try { doc.addImage(png, "PNG", x + 2, barY, bw, bh); } catch {} }
         doc.setFont("helvetica", "bold"); doc.setFontSize(nameFs); doc.setTextColor(6, 95, 70);
-        const nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5);
-        doc.text(nameLines, cx, yCur + nameFs * 0.4, { align: "center" });
-        yCur += nameLines.length * nameFs * 0.45 + 1.5;
+        const nameLines = doc.splitTextToSize(String(L.name || "Item"), cellW - 5).slice(0, 2);
+        doc.text(nameLines, cx, nameTop + nameFs * 0.4, { align: "center" });
         doc.setFont("courier", "normal"); doc.setFontSize(serFs); doc.setTextColor(4, 120, 87);
-        doc.text(String(L.serial || ""), cx, yCur + serFs * 0.35, { align: "center" });
+        doc.text(String(L.serial || ""), cx, serialY, { align: "center" });
       }
       doc.save("sappy-legacy-labels.pdf");
       flash("Exported " + labels.length + " label(s).", "ok");
