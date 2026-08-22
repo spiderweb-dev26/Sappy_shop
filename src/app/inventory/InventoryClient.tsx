@@ -141,7 +141,7 @@ export default function InventoryClient() {
       const labels: { id: string; name: string; serial: string; qr: string | null }[] = [];
       for (const i of ordered) labels.push({ id: i.id, name: i.name, serial: i.serial, qr: await makeQrDataUrl(i.serial) });
       if (!labels.length) throw new Error("No labels returned");
-      const cols = 2;
+      const [cols] = grid.split("x").map((n) => parseInt(n, 10));
       const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const m = 8, g = 3, pW = 210, pH = 297;
       const uW = pW - 2 * m, uH = pH - 2 * m - 8;
@@ -150,8 +150,8 @@ export default function InventoryClient() {
       const rowsN = Math.max(1, Math.floor((uH + g) / (cellH + g)));
       const per = cols * rowsN;
       const pages = Math.ceil(labels.length / per);
-      const nameFs = 12;
-      const serFs = 8;
+      const nameFs = cellW >= 60 ? 12 : cellW >= 44 ? 10 : cellW >= 30 ? 8 : 6;
+      const serFs = cellW >= 60 ? 8 : cellW >= 44 ? 7 : 6;
       for (let i = 0; i < labels.length; i++) {
         const pIdx = Math.floor(i / per);
         if (i > 0 && i % per === 0) doc.addPage();
