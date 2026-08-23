@@ -40,7 +40,23 @@ export default function SalesClient() {
   const filledLines = lines.filter((l) => l.name.trim() || l.serial.trim());
 
   function pickInto(key: string, i: Item) { const cur = lines.find((l) => l.key === key); setLine(key, { serial: i.serial, name: i.name, itemId: i.id, query: "", unit: cur && cur.unit !== "" ? cur.unit : i.sellingPrice != null ? String(i.sellingPrice) : "" }); }
-  function onScan(s: string) { setScan(false); const i = items.find((x) => x.serial === s); const name = i?.name || s; const unit = i?.sellingPrice != null ? String(i.sellingPrice) : ""; if (scanTarget.current) setLines((p) => p.map((l) => (l.key === scanTarget.current ? { ...l, serial: s, name, itemId: i?.id || "", query: "", unit: l.unit || unit } : l))); else { const ex = lines.find((l) => l.serial === s); if (ex) setLine(ex.key, { qty: String((Number(ex.qty) || 1) + 1) }); else setLines((p) => [...p.filter((l) => l.name || l.serial || l.query), { ...newLine(Date.now()), serial: s, name, itemId: i?.id || "", unit }]); } scanTarget.current = null; }
+  function onScan(raw: string) {
+    setScan(false);
+    const norm = (v: string) => (v || "").toUpperCase().replace(/[^A-Z0-9-]+/g, "");
+    const code = norm(raw);
+    if (!code) { scanTarget.current = null; return; }
+    const i = items.find((x) => norm(x.serial) === code) || items.find((x) => x.id === code);
+    const name = i?.name || code;
+    const unit = i?.sellingPrice != null ? String(i.sellingPrice) : "";
+    if (scanTarget.current) setLines((p) => p.map((l) => (l.key === scanTarget.current ? { ...l, serial: i?.serial || code, name, itemId: i?.id || "", query: "", unit: l.unit || unit } : l)));
+    else {
+      const ex = lines.find((l) => norm(l.serial) === code);
+      if (ex) setLine(ex.key, { qty: String((Number(ex.qty) || 1) + 1) });
+      else setLines((p) => [...p.filter((l) => l.name || l.serial || l.query), { ...newLine(Date.now()), serial: i?.serial || code, name, itemId: i?.id || "", unit }]);
+    }
+    if (!i) flash("Scanned " + code + " not found in stock - enter unit price manually.", "err");
+    scanTarget.current = null;
+  }
 
   async function record(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); flash("", "ok");
