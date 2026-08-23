@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Upload, Search, Trash2, QrCode, X, Download, Boxes, Pencil, TrendingUp, TrendingDown, FileSpreadsheet, FileDown, Layers, Check, LayoutGrid } from "lucide-react";
+import { Copy } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { etb, fmtDate, ymd } from "@/lib/format";
@@ -19,7 +20,7 @@ const EM = [6, 95, 70] as [number, number, number];
 const MINT = [167, 243, 208] as [number, number, number];
 const CREAM = [255, 248, 231] as [number, number, number];
 const normName = (s?: string | null) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
-const GRIDS = ["2x2", "3x3", "4x3", "5x3", "5x4", "6x6", "8x8", "10x10", "12x12"];
+const GRIDS = ["2x2", "3x3", "4x3", "5x3", "5x4", "6x6", "9x9", "8x8", "10x10", "12x12"];
 
 function triggerDownload(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -288,9 +289,18 @@ export default function InventoryClient() {
       flash("Imported " + ok + " item(s). Same-name entries were stored - review them in the Duplicates tab.", "ok");
     } catch (e: any) { flash(e?.message || "Import failed", "err"); } finally { setBusy(false); }
   }
+  async function multiply(i: Item) {
+    setBusy(true); flash("", "ok");
+    try {
+      const r = await fetch("/api/inventory", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: i.name, category: i.category || undefined, quantity: i.quantity, location: i.location || undefined, notes: i.notes || undefined, sellingPrice: i.sellingPrice, purchaseValue: i.purchaseValue != null ? i.purchaseValue : undefined, costUnknown: i.costUnknown, allowDuplicate: true }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d?.error || "Failed");
+      res.reload(); flash("Multiplied \u201c" + i.name + "\u201d - new copy stored.", "ok");
+    } catch (e: any) { flash(e?.message || "Failed", "err"); } finally { setBusy(false); }
+  }
   const actions = (i: Item) => (
     <div className="flex items-center gap-1">
       <button onClick={() => setLabel(i)} title="QR label" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><QrCode style={{ width: 16, height: 16 }} /></button>
+      <button onClick={() => multiply(i)} title="Multiply item" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Copy style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openEdit(i)} title="Edit" className="rounded-lg p-2 text-emerald-600 transition hover:bg-mint/40 hover:text-emerald-deep active:scale-90"><Pencil style={{ width: 16, height: 16 }} /></button>
       <button onClick={() => openDelete(i)} title="Delete" className="rounded-lg p-2 text-emerald-600/70 transition hover:bg-red-50 hover:text-red-600 active:scale-90"><Trash2 style={{ width: 16, height: 16 }} /></button>
     </div>
