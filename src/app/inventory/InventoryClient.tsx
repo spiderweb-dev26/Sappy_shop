@@ -19,7 +19,7 @@ const EM = [6, 95, 70] as [number, number, number];
 const MINT = [167, 243, 208] as [number, number, number];
 const CREAM = [255, 248, 231] as [number, number, number];
 const normName = (s?: string | null) => (s || "").trim().replace(/\s+/g, " ").toLowerCase();
-const GRIDS = ["2x2", "3x3", "4x3", "5x3", "5x4", "6x6", "2x5", "3x7", "4x9", "4x10"];
+const GRIDS = ["2x2", "3x3", "4x3", "5x3", "5x4", "6x6", "8x8", "10x10", "12x12"];
 
 function triggerDownload(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
@@ -143,12 +143,27 @@ export default function InventoryClient() {
     flash(`Exported ${filtered.length} item(s) to PDF.`, "ok");
   }
 
+  let logoCache: { data: string; ratio: number } | null = null;
+  async function loadLogo() {
+    if (logoCache) return logoCache;
+    try {
+      const r = await fetch("/img/logo.png", { cache: "force-cache" });
+      if (!r.ok) return null;
+      const blob = await r.blob();
+      const data: string = await new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result)); fr.readAsDataURL(blob); });
+      const img = new Image();
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = data; });
+      logoCache = { data, ratio: img.width / Math.max(1, img.height) };
+      return logoCache;
+    } catch { return null; }
+  }
   async function downloadSheet() {
     if (!ordered.length) return;
     setSheetBusy(true); flash("", "ok");
     try {
       const labels: { id: string; name: string; serial: string; qr: string | null }[] = [];
       for (const i of ordered) labels.push({ id: i.id, name: i.name, serial: i.serial, qr: await makeQrDataUrl(i.serial) });
+      const logo = await loadLogo();
       if (!labels.length) throw new Error("No labels returned");
       const [cols, rowsN] = grid.split("x").map((n) => parseInt(n, 10));
       const per = cols * rowsN;
@@ -169,6 +184,7 @@ export default function InventoryClient() {
         const pad = 2, textH = 9;
         const qrSize = Math.max(8, Math.min(cellW - 2 * pad, cellH - 2 * pad - textH));
         const qrX = x + (cellW - qrSize) / 2; const qrY = y + pad;
+        if (logo) { const lh = Math.min(7, cellH * 0.16); const lw = Math.min(lh * logo.ratio, cellW * 0.35); try { doc.addImage(logo.data, "PNG", x + cellW - 2 - lw, y + 2, lw, lh); } catch {} }
         const L = labels[i];
         if (L.qr) { try { doc.addImage(L.qr, "PNG", qrX, qrY, qrSize, qrSize); } catch {} }
         else { doc.setDrawColor(6, 95, 70); doc.setLineWidth(0.2); doc.roundedRect(qrX, qrY, qrSize, qrSize, 1, 1, "S"); doc.setFontSize(5); doc.setTextColor(6, 95, 70); doc.text("QR n/a", x + cellW / 2, qrY + qrSize / 2, { align: "center" }); }
