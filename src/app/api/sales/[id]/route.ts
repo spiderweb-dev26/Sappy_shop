@@ -13,6 +13,15 @@ export async function DELETE(req: Request, ctx: any) {
     await ensureSchema();
     const r = await withRetry(() => prisma.sale.findUnique({ where: { id: params.id } }));
     if (!r) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    try {
+      const itemId = (r as any).itemId; const qty = Number((r as any).quantity) || 0;
+      if (!(r as any).refunded && itemId && qty > 0) {
+        await withRetry(() => prisma.$transaction(async (tx: any) => {
+          const item = await tx.inventoryItem.findUnique({ where: { id: itemId } });
+          if (item) await tx.inventoryItem.update({ where: { id: itemId }, data: { quantity: Math.max(0, item.quantity + qty) } });
+        }));
+      }
+    } catch {} // stock restore on delete
     await withRetry(() => prisma.sale.delete({ where: { id: params.id } }));
     return NextResponse.json({ ok: true });
   } catch (e: any) {
