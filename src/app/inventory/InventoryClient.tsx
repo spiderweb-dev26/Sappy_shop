@@ -223,7 +223,7 @@ export default function InventoryClient() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     const nm = (form.name || "").trim().toLowerCase();
-    if (nm) {
+    if (!edit && nm) {
       const clashes = items.filter((i) => (!edit || i.id !== edit.id) && (i.name || "").trim().toLowerCase() === nm);
       if (clashes.length) {
         setErr(`"${(form.name || "").trim()}" is already recorded:` + "\n" + clashes.map((c) => `• ${c.name} — ${c.serial} (qty ${c.quantity})`).join("\n") + "\nEdit the existing item instead of adding a duplicate.");
